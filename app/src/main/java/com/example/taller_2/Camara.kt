@@ -18,6 +18,9 @@ class Camara : AppCompatActivity(){
     private lateinit var imageView: ImageView
     private val REQUEST_IMAGE_CAPTURE = 1
     private val REQUEST_PICK_IMAGE = 2
+
+    private val desiredWidth = 500
+    private val desiredHeight = 500
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camara)
@@ -76,10 +79,14 @@ class Camara : AppCompatActivity(){
         // Manejar el resultado de la cámara
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             val imageBitmap = data?.extras?.get("data") as Bitmap
-            imageView.setImageBitmap(imageBitmap)
+
+            // Redimensionar la imagen capturada antes de mostrarla
+            val resizedImage = resizeImage(imageBitmap, desiredWidth, desiredHeight)
+
+            imageView.setImageBitmap(resizedImage)
 
             // Guarda la imagen capturada en la galería del teléfono
-            val imageUri = saveImageToGallery(imageBitmap)
+            val imageUri = saveImageToGallery(resizedImage)
             if (imageUri != null) {
                 Toast.makeText(this, "Imagen de la cámara guardada en la galería", Toast.LENGTH_SHORT).show()
             }
@@ -91,7 +98,11 @@ class Camara : AppCompatActivity(){
                 val imageUri = data.data
                 try {
                     val imageBitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
-                    imageView.setImageBitmap(imageBitmap)
+
+                    // Redimensionar la imagen seleccionada antes de mostrarla
+                    val resizedImage = resizeImage(imageBitmap, desiredWidth, desiredHeight)
+
+                    imageView.setImageBitmap(resizedImage)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Toast.makeText(this, "Error al cargar la imagen de la galería", Toast.LENGTH_SHORT).show()
@@ -100,6 +111,9 @@ class Camara : AppCompatActivity(){
                 Toast.makeText(this, "No se seleccionó ninguna imagen de la galería", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+    private fun resizeImage(image: Bitmap, width: Int, height: Int): Bitmap {
+        return Bitmap.createScaledBitmap(image, width, height, false)
     }
 
 
