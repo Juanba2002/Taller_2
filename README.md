@@ -1,9 +1,9 @@
 # Taller 2
 
 ## Integrantes
-- Martin Medina
-- Santiago Botero Pacheco
 - Juan David Barajas
+-  Santiago Botero Pacheco
+-   Martin Medina
 
 ## Grupo
 La unión hace la juerga
