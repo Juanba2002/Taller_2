@@ -145,7 +145,16 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
             mMap.clear()
             val address = geoCoderSearchLatLang(latLng)
             mMap.addMarker(MarkerOptions().position(latLng).title(address))
+
+            // Calcular la distancia entre la ubicación actual y el marcador
+            val distancia = calculateDistance(BOGOTA, latLng)
+
+            // Mostrar un Toast con la distancia
+            val distanciaText = "Distancia a Bogotá: ${distancia} km"
+            showToast(distanciaText)
         }
+
+
     }
     private fun geoCoderSearchLatLang(latLng: LatLng): String {
         val addresses = mGeocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
