@@ -7,8 +7,11 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Geocoder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -28,6 +31,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileWriter
+import java.io.IOException
 import kotlin.math.*
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -45,6 +49,7 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
     private var lightSensor: Sensor? = null
     private var sensorManager: SensorManager? = null
     private val LIGHT_LIMIT = 1500.0f
+    private lateinit var mGeocoder: Geocoder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +57,8 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
 
         val fineLocationPermission = Manifest.permission.ACCESS_FINE_LOCATION
         val coarseLocationPermission = Manifest.permission.ACCESS_COARSE_LOCATION
+        val texto:EditText=findViewById(R.id.texto)
+        mGeocoder = Geocoder(this)
         if (ContextCompat.checkSelfPermission(this, fineLocationPermission) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, coarseLocationPermission) != PackageManager.PERMISSION_GRANTED) {
 
@@ -81,6 +88,14 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
         }
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         lightSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT)
+        texto.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                searchAddress()
+                return@setOnEditorActionListener true // Agregar esta línea
+            }
+            false // No se maneja otro tipo de evento de acción
+        }
+
     }
 
     override fun onRequestPermissionsResult(
@@ -223,6 +238,33 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
 
         override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
             // No se necesita una implementación aquí
+        }
+    }
+    private fun searchAddress() {
+        val addressString = findViewById<EditText>(R.id.texto).text.toString()
+        if (addressString.isNotEmpty()) {
+            try {
+                val addresses = mGeocoder.getFromLocationName(addressString, 1)
+                if (addresses != null && addresses.isNotEmpty()) {
+                    val addressResult = addresses[0]
+                    val position = LatLng(addressResult.latitude, addressResult.longitude)
+
+                    if (::mMap.isInitialized) {
+                        mMap.clear()
+                        mMap.addMarker(MarkerOptions().position(position).title(addressString))
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 15.0f))
+                    } else {
+                        Toast.makeText(this, "Mapa no inicializado", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this, "Dirección no encontrada", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                Toast.makeText(this, "Error al buscar la dirección", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(this, "La dirección está vacía", Toast.LENGTH_SHORT).show()
         }
     }
 

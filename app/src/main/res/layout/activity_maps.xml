@@ -9,6 +9,8 @@
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:hint="Direccion"
+        android:inputType="text"
+        android:imeOptions="actionSend"
         android:background="@drawable/roundcorner"
 
         />
