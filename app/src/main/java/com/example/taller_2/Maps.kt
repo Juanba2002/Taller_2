@@ -132,6 +132,21 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         enableLocation()
+        mMap.setOnMapLongClickListener { latLng ->
+            mMap.clear()
+            val address = geoCoderSearchLatLang(latLng)
+            mMap.addMarker(MarkerOptions().position(latLng).title(address))
+        }
+    }
+    private fun geoCoderSearchLatLang(latLng: LatLng): String {
+        val addresses = mGeocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+        if (addresses != null) {
+            if (addresses.isNotEmpty()) {
+                val address = addresses[0]
+                return address.getAddressLine(0) ?: "Dirección desconocida"
+            }
+        }
+        return "Dirección no encontrada"
     }
 
     private fun enableLocation() {
