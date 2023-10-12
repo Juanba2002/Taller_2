@@ -82,34 +82,7 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         lightSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT)
     }
-    override fun onStart() {
-        super.onStart()
-        // Registrar el escuchador del sensor de luz
-        sensorManager?.registerListener(lightSensorEventListener, lightSensor, SensorManager.SENSOR_DELAY_UI)
-    }
 
-    override fun onStop() {
-        super.onStop()
-        // Detener el escuchador del sensor de luz
-        sensorManager?.unregisterListener(lightSensorEventListener)
-    }
-    private val lightSensorEventListener = object : SensorEventListener {
-        override fun onSensorChanged(sensorEvent: SensorEvent) {
-            if (mMap != null) {
-                if (sensorEvent.values[0] < LIGHT_LIMIT) {
-                    // Cambia el estilo del mapa a estilo nocturno
-                    mMap?.setMapStyle(MapStyleOptions.loadRawResourceStyle(this@Maps, R.raw.map_night_style))
-                } else {
-                    // Cambia el estilo del mapa a estilo de día
-                    mMap?.setMapStyle(MapStyleOptions.loadRawResourceStyle(this@Maps, R.raw.map_day_style))
-                }
-            }
-        }
-
-        override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
-            // No se necesita una implementación aquí
-        }
-    }
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -224,6 +197,35 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
 
         return radius * c
     }
+    override fun onStart() {
+        super.onStart()
+        // Registrar el escuchador del sensor de luz
+        sensorManager?.registerListener(lightSensorEventListener, lightSensor, SensorManager.SENSOR_DELAY_UI)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Detener el escuchador del sensor de luz
+        sensorManager?.unregisterListener(lightSensorEventListener)
+    }
+    private val lightSensorEventListener = object : SensorEventListener {
+        override fun onSensorChanged(sensorEvent: SensorEvent) {
+            if (::mMap.isInitialized) {  // Verificar si mMap está inicializado
+                if (sensorEvent.values[0] < LIGHT_LIMIT) {
+                    // Cambia el estilo del mapa a estilo nocturno
+                    mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this@Maps, R.raw.map_night_style))
+                } else {
+                    // Cambia el estilo del mapa a estilo de día
+                    mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this@Maps, R.raw.map_day_style))
+                }
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
+            // No se necesita una implementación aquí
+        }
+    }
+
     companion object {
         const val LOCALIZACION = 1
     }
