@@ -1,7 +1,12 @@
 package com.example.taller_2
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -18,6 +23,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.maps.model.MapStyleOptions
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -36,6 +42,9 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
     private val MIN_DISTANCE_METERS = 30.0
     private val JSON_FILE_NAME = "locations.json"
     private val locationList = JSONArray()
+    private var lightSensor: Sensor? = null
+    private var sensorManager: SensorManager? = null
+    private val LIGHT_LIMIT = 1500.0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +78,36 @@ class Maps : AppCompatActivity(), OnMapReadyCallback {
                 super.onLocationResult(locationResult)
                 onLocationChanged(locationResult.lastLocation)
             }
+        }
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        lightSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT)
+    }
+    override fun onStart() {
+        super.onStart()
+        // Registrar el escuchador del sensor de luz
+        sensorManager?.registerListener(lightSensorEventListener, lightSensor, SensorManager.SENSOR_DELAY_UI)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Detener el escuchador del sensor de luz
+        sensorManager?.unregisterListener(lightSensorEventListener)
+    }
+    private val lightSensorEventListener = object : SensorEventListener {
+        override fun onSensorChanged(sensorEvent: SensorEvent) {
+            if (mMap != null) {
+                if (sensorEvent.values[0] < LIGHT_LIMIT) {
+                    // Cambia el estilo del mapa a estilo nocturno
+                    mMap?.setMapStyle(MapStyleOptions.loadRawResourceStyle(this@Maps, R.raw.map_night_style))
+                } else {
+                    // Cambia el estilo del mapa a estilo de día
+                    mMap?.setMapStyle(MapStyleOptions.loadRawResourceStyle(this@Maps, R.raw.map_day_style))
+                }
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
+            // No se necesita una implementación aquí
         }
     }
     override fun onRequestPermissionsResult(
